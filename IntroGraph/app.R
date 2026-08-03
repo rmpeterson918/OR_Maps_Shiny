@@ -94,13 +94,8 @@ server <- function(input, output, session) {
     
     gg <- ggplotly(my_map, tooltip = "text")
     
-    # Hover fix loop
     for (i in seq_along(gg$x$data)) {
-      if (is.null(gg$x$data[[i]]$mode) || gg$x$data[[i]]$mode != "text") {
-        gg$x$data[[i]]$hoveron <- "fills"
-        gg$x$data[[i]]$textposition <- "none"
-        gg$x$data[[i]]$hoverinfo <- "text"
-      }
+      gg$x$data[[i]]$hoverinfo <- "none"
     }
     
     gg
