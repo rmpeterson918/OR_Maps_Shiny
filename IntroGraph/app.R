@@ -23,61 +23,6 @@ geo_data <- st_read("OR_avas.geojson")
 # Download/cache Oregon county borders for background map layer
 or_counties <- counties(state = "Oregon", class = "sf")
 
-# Safe DB Port fallback
-port_val <- Sys.getenv("DB_PORT")
-if (port_val == "") port_val <- "5432"
-
-con <- dbConnect(
-  RPostgres::Postgres(),
-  dbname   = Sys.getenv("DB_NAME"),
-  host     = Sys.getenv("DB_HOST"),
-  port     = as.integer(port_val),
-  user     = Sys.getenv("DB_USER"),
-  password = Sys.getenv("DB_PASSWORD"),
-  connect_timeout = 10
-)
-
-# Load both analysis panels
-regional  <- dbReadTable(con, "analysis_panel_regional")   %>% as_tibble()
-statewide <- dbReadTable(con, "analysis_panel_statewide")  %>% as_tibble()
-
-regional <- regional %>%
-  mutate(
-    yield_best = coalesce(yield_per_acre, yield_derived),
-    has_reported_yield = !is.na(yield_per_acre)
-  )
-statewide <- statewide %>%
-  mutate(
-    yield_best = coalesce(yield_per_acre, yield_derived),
-    has_reported_yield = !is.na(yield_per_acre)
-  )
-
-# Collapse to region-year
-ry <- regional %>%
-  distinct(region_label, yr, gdd_apr_sep, gdd_apr_oct, gdd_veraison_harvest,
-           frost_days_annual, frost_days_spring, heat_stress_days,
-           coldest_spring_night_c, winter_tmin_jan_feb, summer_tmax_mean,
-           diurnal_range_ripening, gs_ppt_mm, oct_ppt_mm, sep_oct_ppt_mm,
-           spring_ppt_mm, annual_ppt_mm, vpd_max_summer, vpd_max_ripening)
-
-ry_anom <- ry %>%
-  filter(!region_label %in% c("Eastern Oregon", "Other Region", "Other Oregon")) %>%
-  group_by(region_label) %>%
-  mutate(gdd_anom = gdd_apr_sep - mean(gdd_apr_sep, na.rm = TRUE)) %>%
-  ungroup()
-
-sw_climate <- statewide %>%
-  distinct(yr, gdd_apr_sep, gdd_apr_oct, frost_days_annual, frost_days_spring,
-           heat_stress_days, summer_tmax_mean, oct_ppt_mm, annual_ppt_mm,
-           vpd_max_summer, diurnal_range_ripening) %>%
-  arrange(yr) %>%
-  mutate(gdd_rolling10 = zoo::rollmean(gdd_apr_sep, 10, fill = NA, align = "right"))
-
-sw_climate <- sw_climate %>%
-  mutate(gdd_anom = gdd_apr_sep - mean(gdd_apr_sep, na.rm = TRUE),
-         gdd_rolling10_anom = gdd_rolling10 - mean(gdd_apr_sep, na.rm = TRUE))
-
-dbDisconnect(con)
 
 # ---------------------------
 # UI
