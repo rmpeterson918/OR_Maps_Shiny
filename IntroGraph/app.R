@@ -13,8 +13,10 @@ library(tigris)
 
 geo_data <- st_read("OR_avas.geojson")
 
-# Download/cache Oregon county borders for background map layer
 or_counties <- counties(state = "Oregon", class = "sf")
+
+or_counties <- st_simplify(or_counties, dTolerance = 0.002, preserveTopology = TRUE)
+geo_data    <- st_simplify(geo_data, dTolerance = 0.002, preserveTopology = TRUE)
 
 
 # ---------------------------
