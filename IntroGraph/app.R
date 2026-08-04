@@ -190,7 +190,7 @@ library(tigris)
 # LOAD DATA
 # ---------------------------
 
-geo_data <- st_read("/Users/rebekahpeterson/Documents/DS 510/OR_avas.geojson")
+geo_data <- st_read("OR_avas.geojson")
 or_counties <- counties(state = "Oregon", class = "sf")
 # Simplify geometries (dToler = tolerance in degrees, ~0.001 to 0.01 works great)
 or_counties <- st_simplify(or_counties, dTolerance = 0.002, preserveTopology = TRUE)
@@ -298,7 +298,7 @@ server <- function(input, output, session) {
                     label.padding = unit(0.05, "lines")) +
       
       # Layer 2: AVAs
-      geom_sf(data = geo_data, fill = "#4393c3", color = "#2166ac", size = 0.2, alpha = 0.5) +
+      geom_sf(data = geo_data, fill = "#4393c3", color = "blue", size = 0.2, alpha = 0.5) +
       
       # Layer 3: Repelled AVA Labels
       geom_label_repel(
